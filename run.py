@@ -14,7 +14,7 @@ from stravalib.client import Client
 from stravalib.util import limiter
 
 app = Flask(__name__)
-PORT = int(os.environ.get("PORT", 8002))
+PORT = int(os.environ.get("PORT", 8001))
 APP_NAME = os.environ.get("HEROKU_APP_NAME")
 DOMAIN = "https://{}.herokuapp.com".format(APP_NAME) if APP_NAME else "http://127.0.0.1:"+str(PORT)
 print("DEBUG: running on :" + DOMAIN)
@@ -51,7 +51,7 @@ def get_images_from_segment(segment_id, client):
 @app.route("/demo")
 def show_images_demo():
     # look into this: https://github.com/saimn/sigal/
-    with open("/home/gstupp/Documents/strava-pics/demo_images.json") as f:
+    with open("demo_images.json") as f:
         images = json.load(f)['images']
     return render_template('test.html', images=images)
 
@@ -77,8 +77,7 @@ def auth():
         return show_images_demo()
     else:
         client = Client()
-        url = client.authorization_url(client_id=MY_STRAVA_CLIENT_ID,
-                                   redirect_uri=DOMAIN+'/authorization')
+        url = client.authorization_url(client_id=MY_STRAVA_CLIENT_ID, redirect_uri=DOMAIN+'/authorization')
         print("DEBUG: auth url :" + url)
         return redirect(url, code=302)
 
