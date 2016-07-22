@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        div {
+            height: 25vw;
+            width: 48vw;
+            display: inline-block;
+            text-align: center;
+            line-height: 25vw;
+            font-size: 20vw;
+            margin-left: -4px;
+            position: relative;
+        }
+
+    </style>
+    <title>Test</title>
+</head>
+<body>
+<br>
+
+{% for image in images %}
+<div><a href="https://www.strava.com/activities/{{ image.activity_id }}"><img src="{{ image.url }}"></a></div>
+{% endfor %}
+
+</body>
+</html>
