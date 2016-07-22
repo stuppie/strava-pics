@@ -1,28 +1,29 @@
-import os
-from flask import Flask, request
-from flask import render_template, jsonify, url_for, redirect
-
 import json
-
-import re
-from bs4 import BeautifulSoup
-import requests
-import os
 import webbrowser
 
+import os
+import re
+import requests
+from bs4 import BeautifulSoup
+from flask import Flask, request
+from flask import render_template, redirect
 from stravalib.client import Client
 from stravalib.util import limiter
+
+try:
+    from local import access_token
+    # client = Client(rate_limiter=limiter.DefaultRateLimiter())
+    # client.access_token = access_token
+except ImportError:
+    pass
 
 app = Flask(__name__)
 PORT = int(os.environ.get("PORT", 8001))
 APP_NAME = os.environ.get("HEROKU_APP_NAME")
-DOMAIN = "https://{}.herokuapp.com".format(APP_NAME) if APP_NAME else "http://127.0.0.1:"+str(PORT)
+DOMAIN = "https://{}.herokuapp.com".format(APP_NAME) if APP_NAME else "http://127.0.0.1:" + str(PORT)
 print("DEBUG: running on :" + DOMAIN)
 MY_STRAVA_CLIENT_ID = 119
 MY_STRAVA_CLIENT_SECRET = "20f9f2f3132305d9d148680ad70ddc6cc9c9aa53"
-
-client = Client(rate_limiter=limiter.DefaultRateLimiter())
-# client.access_token = "fd3f5ecc75d98072f6e62525ae925cc9a19691d5"
 
 """
 # one image. public.
@@ -33,12 +34,16 @@ activity_url = "https://www.strava.com/activities/648107295"
 activity_url = "https://www.strava.com/activities/646906435"
 # redirect from segment_effort
 activity_url = "https://www.strava.com/segment_efforts/15839916336"
-"""
+
+# <meta content="https://dgtzuqphqg23d.cloudfront.net/wMOQejtoja69VLObx5nr_1B5zVD-ju7OSyszGll35ww-768x432.jpg" property="og:image">
 
 segment_id = 1670623 #
 segment_id = 3896014 #shred it!
+"""
+
+
 def get_images_from_segment(segment_id, client):
-    leaderboard = client.get_segment_leaderboard(segment_id,timeframe='this_week',top_results_limit=100)
+    leaderboard = client.get_segment_leaderboard(segment_id, timeframe='this_week', top_results_limit=100)
     activities = [x.activity_id for x in leaderboard]
 
     p = []
@@ -77,7 +82,7 @@ def auth():
         return show_images_demo()
     else:
         client = Client()
-        url = client.authorization_url(client_id=MY_STRAVA_CLIENT_ID, redirect_uri=DOMAIN+'/authorization')
+        url = client.authorization_url(client_id=MY_STRAVA_CLIENT_ID, redirect_uri=DOMAIN + '/authorization')
         print("DEBUG: auth url :" + url)
         return redirect(url, code=302)
 
@@ -103,14 +108,11 @@ def show_page(html):
     webbrowser.open(url)
 
 
-# <meta content="https://dgtzuqphqg23d.cloudfront.net/wMOQejtoja69VLObx5nr_1B5zVD-ju7OSyszGll35ww-768x432.jpg" property="og:image">
-
-
 def get_pictures_from_activity(activity_url):
     h = requests.get(activity_url)
     activity_id = int(h.url.rsplit("/")[-1].split("#")[0])
-    #show_page(h.text.encode('utf-8'))
-    soup = BeautifulSoup(h.text, 'lxml')
+    # show_page(h.text.encode('utf-8'))
+    soup = BeautifulSoup(h.text, ['lxml', 'xml'])
 
     try:
         s = [s for s in soup.find_all("script") if s.string and "renderInstagram" in s.string][0]
@@ -120,11 +122,12 @@ def get_pictures_from_activity(activity_url):
             # This is probably a private activity, so we can only get the first image. from the html mttadata
             # This seems like a bug in strava as it works even with private activities? But only for the first image
             images = set([x['content'] for x in soup.find_all("meta", property=["og:image", 'twitter:image'])])
-            photos = [{'url': x, 'lat': None, 'lng': None, 'activity_id': activity_id} for x in images if "summary_activity_generic" not in x]
+            photos = [{'url': x, 'lat': None, 'lng': None, 'activity_id': activity_id} for x in images if
+                      "summary_activity_generic" not in x]
             return photos
 
         photosStrava = json.loads(photosJS[0])
-        photos = [{'url': x['large'], 'lat':x['lat'], 'lng':x['lng'], 'activity_id': x['activity_id']}
+        photos = [{'url': x['large'], 'lat': x['lat'], 'lng': x['lng'], 'activity_id': x['activity_id']}
                   for x in photosStrava]
         return photos
     except Exception as e:
