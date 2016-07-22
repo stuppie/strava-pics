@@ -112,7 +112,7 @@ def get_pictures_from_activity(activity_url):
     h = requests.get(activity_url)
     activity_id = int(h.url.rsplit("/")[-1].split("#")[0])
     # show_page(h.text.encode('utf-8'))
-    soup = BeautifulSoup(h.text, ['lxml', 'xml'])
+    soup = BeautifulSoup(h.text, 'lxml')
 
     try:
         s = [s for s in soup.find_all("script") if s.string and "renderInstagram" in s.string][0]
