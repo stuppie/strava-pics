@@ -11,19 +11,19 @@ from stravalib.client import Client
 from stravalib.util import limiter
 
 try:
-    from local import access_token
-    # client = Client(rate_limiter=limiter.DefaultRateLimiter())
-    # client.access_token = access_token
-except ImportError:
-    pass
+    from local import MY_STRAVA_CLIENT_SECRET
+    MY_STRAVA_CLIENT_ID = 119
+except ImportError as e:
+    print("strava client secret token required in local.py")
+    raise ImportError(e.__str__())
+
 
 app = Flask(__name__)
 PORT = int(os.environ.get("PORT", 8001))
 APP_NAME = os.environ.get("HEROKU_APP_NAME")
 DOMAIN = "https://{}.herokuapp.com".format(APP_NAME) if APP_NAME else "http://127.0.0.1:" + str(PORT)
 print("DEBUG: running on :" + DOMAIN)
-MY_STRAVA_CLIENT_ID = 119
-MY_STRAVA_CLIENT_SECRET = "20f9f2f3132305d9d148680ad70ddc6cc9c9aa53"
+
 
 """
 # one image. public.
